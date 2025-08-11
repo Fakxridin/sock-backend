@@ -9,7 +9,7 @@ module.exports = {
         "food_shablon",
         "bishish_qoldiq",
         {
-          type: Sequelize.DataTypes.DECIMAL(12, 2),
+          type: Sequelize.DataTypes.DECIMAL(12, 5),
           allowNull: false,
           defaultValue: 0,
         },
@@ -20,7 +20,7 @@ module.exports = {
         "food_shablon",
         "averlo_qoldiq",
         {
-          type: Sequelize.DataTypes.DECIMAL(12, 2),
+          type: Sequelize.DataTypes.DECIMAL(12, 5),
           allowNull: false,
           defaultValue: 0,
         },
@@ -31,7 +31,7 @@ module.exports = {
         "food_shablon",
         "dazmol_qoldiq",
         {
-          type: Sequelize.DataTypes.DECIMAL(12, 2),
+          type: Sequelize.DataTypes.DECIMAL(12, 5),
           allowNull: false,
           defaultValue: 0,
         },

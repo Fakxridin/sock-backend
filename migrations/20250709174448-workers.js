@@ -24,7 +24,7 @@ module.exports = {
             allowNull: true,
           },
           fixed_salary: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },
@@ -54,7 +54,12 @@ module.exports = {
             defaultValue: 0,
           },
           total_balance: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
+            allowNull: false,
+            defaultValue: 0,
+          },
+          total_dollar_balance: {
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },

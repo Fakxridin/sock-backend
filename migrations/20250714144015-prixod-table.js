@@ -18,13 +18,24 @@ module.exports = {
             type: Sequelize.DataTypes.INTEGER,
             allowNull: false,
           },
+          kurs_summa: {
+            // yangi ustun
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
+            allowNull: false,
+            defaultValue: 0,
+          },
           total_overall_cost: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },
           rasxod_summa: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
+            allowNull: false,
+            defaultValue: 0,
+          },
+          rasxod_summa_dollar: {
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },
@@ -70,20 +81,20 @@ module.exports = {
             onDelete: "RESTRICT",
           },
           miqdor: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
           },
           product_cost: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
           },
           initial_cost: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },
           total_cost: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
           },
           createdAt: Sequelize.DataTypes.DATE,

@@ -26,6 +26,7 @@ class ProductController extends BaseController {
         id,
         name,
         narx,
+        dollar_narx,
         qoldiq,
         unit_id,
         sklad1_qoldiq,
@@ -37,6 +38,7 @@ class ProductController extends BaseController {
         id,
         name,
         narx,
+        dollar_narx,
         qoldiq,
         unit_id,
         unit_name: json.unit?.name || null,
@@ -69,6 +71,7 @@ class ProductController extends BaseController {
     const {
       name,
       narx,
+      dollar_narx,
       qoldiq,
       unit_id,
       sklad1_qoldiq,
@@ -80,6 +83,7 @@ class ProductController extends BaseController {
     const product = await ProductModel.create({
       name,
       narx,
+      dollar_narx,
       qoldiq,
       unit_id,
       sklad1_qoldiq,
@@ -109,6 +113,7 @@ class ProductController extends BaseController {
     const {
       name,
       narx,
+      dollar_narx,
       qoldiq,
       unit_id,
       sklad1_qoldiq,
@@ -120,6 +125,7 @@ class ProductController extends BaseController {
     product.name = name;
     product.narx = narx;
     product.qoldiq = qoldiq;
+    (product.dollar_narx = dollar_narx), (product.qoldiq = qoldiq);
     product.unit_id = unit_id;
     product.sklad1_qoldiq = sklad1_qoldiq;
     product.sklad2_qoldiq = sklad2_qoldiq;

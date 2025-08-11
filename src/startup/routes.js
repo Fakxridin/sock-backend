@@ -17,6 +17,8 @@ const tikishRouter = require("../routes/tikish.route");
 const averloRouter = require("../routes/averlo.route");
 const dazmolRouter = require("../routes/dazmol.route");
 const upakovkaRouter = require("../routes/upakovka.router");
+const kursRouter = require("../routes/kurs.route");
+const markedcostRouter = require("../routes/markedcost.route");
 const HttpException = require("../utils/HttpException.utils");
 
 module.exports = async function (app) {
@@ -46,6 +48,8 @@ module.exports = async function (app) {
   app.use(`/api/v1/averlo`, averloRouter);
   app.use(`/api/v1/dazmol`, dazmolRouter);
   app.use(`/api/v1/upakovka`, upakovkaRouter);
+  app.use(`/api/v1/kurs`, kursRouter);
+  app.use(`/api/v1/marked-cost`, markedcostRouter);
   app.all("*", (req, res, next) => {
     const err = new HttpException(404, req.mf("Endpoint not found"));
     next(err);

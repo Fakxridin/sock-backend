@@ -35,6 +35,7 @@ class WorkerController extends BaseController {
       dazmoldan_soni = 0,
       bezakdan_soni = 0,
       total_balance = 0,
+      total_dollar_balance = 0,
     } = req.body;
 
     const worker = await WorkerModel.create({
@@ -47,6 +48,7 @@ class WorkerController extends BaseController {
       dazmoldan_soni,
       bezakdan_soni,
       total_balance,
+      total_dollar_balance,
     });
 
     if (!worker) {
@@ -77,6 +79,7 @@ class WorkerController extends BaseController {
       dazmoldan_soni,
       bezakdan_soni,
       total_balance,
+      total_dollar_balance,
     } = req.body;
 
     worker.fullname = fullname;
@@ -87,6 +90,7 @@ class WorkerController extends BaseController {
     worker.bichishdan_soni = bichishdan_soni;
     worker.dazmoldan_soni = dazmoldan_soni;
     worker.bezakdan_soni = bezakdan_soni;
+    worker.total_dollar_balance = total_dollar_balance;
 
     if (total_balance !== undefined) {
       worker.total_balance = total_balance;

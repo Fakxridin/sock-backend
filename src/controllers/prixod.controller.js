@@ -10,58 +10,88 @@ const BaseController = require("./BaseController");
 const { Op } = require("sequelize");
 
 class PrixodController extends BaseController {
+  // controllers/prixod.controller.js (faqat create va update)
   create = async (req, res, next) => {
     this.checkValidation(req);
     const {
       datetime,
       total_overall_cost,
-      rasxod_summa = 0,
+      rasxod_summa, // so‘m — UI qiymat, shunchaki saqlanadi
+      rasxod_summa_dollar, // usd — HISOB-KITOB uchun ishlatiladi
+      kurs_summa,
       comment,
       prixod_table,
     } = req.body;
+
     const transaction = await PrixodModel.sequelize.transaction();
 
     try {
+      // 1) Asosiy prixodni yaratish
       const prixod = await PrixodModel.create(
-        { datetime, total_overall_cost, rasxod_summa, comment },
+        {
+          datetime,
+          total_overall_cost,
+          rasxod_summa, // so‘m — saqlanadi
+          rasxod_summa_dollar, // usd — saqlanadi
+          kurs_summa,
+          comment,
+        },
         { transaction }
       );
+
+      // 2) Rasxodni taqsimlash uchun umumiy baza
       const totalInitialBase = prixod_table.reduce(
-        (sum, i) => sum + i.miqdor * i.initial_cost,
+        (sum, i) =>
+          sum + (Number(i.miqdor) || 0) * (Number(i.initial_cost) || 0),
         0
       );
-      if (totalInitialBase === 0)
+      if (totalInitialBase === 0) {
         throw new HttpException(400, "Total base for rasxod division is 0");
+      }
 
+      // 3) Hisob-kitoblar USD bo‘yicha
+      const rasxodUsd = Number(rasxod_summa_dollar) || 0;
+
+      // 4) Har bir item uchun hisob-kitob va yaratish
       for (const item of prixod_table) {
         const product = await ProductModel.findByPk(item.product_id, {
           transaction,
         });
-        if (!product)
+        if (!product) {
           throw new HttpException(400, `Product not found: ${item.product_id}`);
+        }
+
         const kontragent = await KontragentModel.findByPk(item.kontragent_id, {
           transaction,
         });
-        if (!kontragent)
+        if (!kontragent) {
           throw new HttpException(
             400,
             `Kontragent not found: ${item.kontragent_id}`
           );
+        }
 
         item.prixod_id = prixod.id;
-        const base = item.miqdor * item.initial_cost;
-        const rasxodShare = (base / totalInitialBase) * rasxod_summa;
-        const rasxodPerUnit = rasxodShare / item.miqdor;
 
-        item.product_cost = Number(item.initial_cost) + rasxodPerUnit;
-        item.total_cost = item.product_cost * item.miqdor;
+        const miqdor = Number(item.miqdor) || 0;
+        const initial = Number(item.initial_cost) || 0;
+
+        const base = miqdor * initial;
+        const rasxodShare = (base / totalInitialBase) * rasxodUsd; // USD ulushi
+        const rasxodPerUnit = miqdor ? rasxodShare / miqdor : 0;
+
+        item.product_cost = initial + rasxodPerUnit; // USD
+        item.total_cost = item.product_cost * miqdor; // USD
 
         await PrixodTableModel.create(item, { transaction });
-        product.sklad1_qoldiq += item.miqdor;
-        product.narx = item.product_cost;
+
+        // Ombor va narxni yangilash
+        product.sklad1_qoldiq += miqdor;
+        product.narx = item.product_cost; // USD
         await product.save({ transaction });
 
-        kontragent.balance += item.miqdor * item.initial_cost;
+        // Kontragent balansini yangilash (USD)
+        kontragent.balance += miqdor * initial;
         await kontragent.save({ transaction });
       }
 
@@ -78,11 +108,14 @@ class PrixodController extends BaseController {
     const {
       datetime,
       total_overall_cost,
-      rasxod_summa = 0,
+      rasxod_summa, // so‘m — saqlanadi
+      rasxod_summa_dollar, // usd — hisob-kitoblar uchun
       comment,
+      kurs_summa,
       prixod_table,
     } = req.body;
     const { id } = req.params;
+
     const transaction = await PrixodModel.sequelize.transaction();
 
     try {
@@ -92,20 +125,21 @@ class PrixodController extends BaseController {
       });
       if (!prixod) throw new HttpException(404, "Prixod not found");
 
-      // Update main prixod fields
+      // 1) Asosiy maydonlarni yangilash
       prixod.datetime = datetime;
       prixod.total_overall_cost = total_overall_cost;
-      prixod.rasxod_summa = rasxod_summa;
+      prixod.rasxod_summa = rasxod_summa; // so‘m — saqlanadi
+      prixod.rasxod_summa_dollar = rasxod_summa_dollar; // usd — saqlanadi
+      prixod.kurs_summa = kurs_summa;
       prixod.comment = comment;
       await prixod.save({ transaction });
 
-      // Remove deleted items
+      // 2) O‘chirilgan itemlarni topish va qaytarish
       const incomingIds = prixod_table.map((i) => i.id).filter(Boolean);
       const itemsToDelete = prixod.prixodItems.filter(
         (item) => !incomingIds.includes(item.id)
       );
 
-      // O'chirilgan itemlar uchun sklad va balansni qaytarish
       for (const itemToDelete of itemsToDelete) {
         const product = await ProductModel.findByPk(itemToDelete.product_id, {
           transaction,
@@ -130,75 +164,84 @@ class PrixodController extends BaseController {
         transaction,
       });
 
-      // Calculate total base for rasxod division
+      // 3) Rasxodni taqsimlash uchun umumiy baza
       const totalInitialBase = prixod_table.reduce(
-        (sum, i) => sum + i.miqdor * i.initial_cost,
+        (sum, i) =>
+          sum + (Number(i.miqdor) || 0) * (Number(i.initial_cost) || 0),
         0
       );
-      if (totalInitialBase === 0)
+      if (totalInitialBase === 0) {
         throw new HttpException(400, "Total base for rasxod division is 0");
+      }
 
-      // Yangilangan va yangi itemlar uchun
+      // 4) Hisob-kitoblar USD bo‘yicha
+      const rasxodUsd = Number(rasxod_summa_dollar) || 0;
+
+      // 5) Yangilash / qo‘shish sikli
       for (const item of prixod_table) {
         const product = await ProductModel.findByPk(item.product_id, {
           transaction,
         });
-        if (!product)
+        if (!product) {
           throw new HttpException(400, `Product not found: ${item.product_id}`);
+        }
 
         const kontragent = await KontragentModel.findByPk(item.kontragent_id, {
           transaction,
         });
-        if (!kontragent)
+        if (!kontragent) {
           throw new HttpException(
             400,
             `Kontragent not found: ${item.kontragent_id}`
           );
+        }
 
-        // Hisoblashlar
         item.prixod_id = id;
-        const base = item.miqdor * item.initial_cost;
-        const rasxodShare = (base / totalInitialBase) * rasxod_summa;
-        const rasxodPerUnit = rasxodShare / item.miqdor;
-        item.product_cost = Number(item.initial_cost) + rasxodPerUnit;
-        item.total_cost = item.product_cost * item.miqdor;
 
-        // Avvalgi itemni topish
+        const miqdor = Number(item.miqdor) || 0;
+        const initial = Number(item.initial_cost) || 0;
+
+        const base = miqdor * initial;
+        const rasxodShare = (base / totalInitialBase) * rasxodUsd; // USD ulushi
+        const rasxodPerUnit = miqdor ? rasxodShare / miqdor : 0;
+
+        item.product_cost = initial + rasxodPerUnit; // USD
+        item.total_cost = item.product_cost * miqdor; // USD
+
         const oldItem = prixod.prixodItems.find((x) => x.id === item.id);
 
         if (oldItem) {
-          // Skladni to'g'ri yangilash
-          const skladDiff = item.miqdor - oldItem.miqdor;
+          // Ombor farqi
+          const skladDiff = miqdor - oldItem.miqdor;
           if (skladDiff !== 0) {
             product.sklad1_qoldiq += skladDiff;
           }
 
-          // Kontragent balansini yangilash
+          // Kontragent balans farqi (USD)
           const oldSumma = oldItem.miqdor * oldItem.initial_cost;
-          const newSumma = item.miqdor * item.initial_cost;
+          const newSumma = miqdor * initial;
           const diffSumma = newSumma - oldSumma;
-
           if (diffSumma !== 0) {
             kontragent.balance += diffSumma;
             await kontragent.save({ transaction });
           }
 
-          // Itemni yangilash
           await PrixodTableModel.update(item, {
             where: { id: item.id },
             transaction,
           });
         } else {
           // Yangi item
-          product.sklad1_qoldiq += item.miqdor;
-          kontragent.balance += item.miqdor * item.initial_cost;
+          product.sklad1_qoldiq += miqdor;
+
+          // Kontragent balansi (USD)
+          kontragent.balance += miqdor * initial;
           await kontragent.save({ transaction });
 
-          // Yangi itemni yaratish
           await PrixodTableModel.create(item, { transaction });
         }
 
-        // Mahsulot narxini har doim yangilash
+        // Mahsulot narxini har doim yangilash (USD)
         product.narx = item.product_cost;
         await product.save({ transaction });
       }

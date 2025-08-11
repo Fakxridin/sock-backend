@@ -50,7 +50,12 @@ WorkerModel.init(
       defaultValue: 0,
     },
     total_balance: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    total_dollar_balance: {
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },

@@ -16,42 +16,58 @@ FoodShablonModel.init(
       allowNull: false,
     },
     total_spent: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
     selling_price: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
+    selling_price_som: {
+      type: DataTypes.DECIMAL(12, 5),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    total_spent_som: {
+      type: DataTypes.DECIMAL(12, 5),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    kurs_summa: {
+      type: DataTypes.DECIMAL(12, 5),
+      allowNull: false,
+      defaultValue: 0,
+    },
+
     qoldiq: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
     sklad1_qoldiq: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
     sklad2_qoldiq: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
     bishish_qoldiq: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
     averlo_qoldiq: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
     dazmol_qoldiq: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },

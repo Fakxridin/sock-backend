@@ -5,6 +5,7 @@ exports.productSchemas = {
     name: Joi.string().required().min(2).max(50).label("Product name"),
 
     narx: Joi.number().min(0).required().label("Price"),
+    dollar_narx: Joi.number().min(0).required().label("Dollar Price"),
 
     qoldiq: Joi.number().min(0).required().label("Stock"),
 
@@ -23,6 +24,7 @@ exports.productSchemas = {
     name: Joi.string().required().min(2).max(50).label("Product name"),
 
     narx: Joi.number().min(0).required().label("Price"),
+    dollar_narx: Joi.number().min(0).required().label("Dollar Price"),
 
     qoldiq: Joi.number().min(0).required().label("Stock"),
 

@@ -39,6 +39,4 @@ NeededProductModel.init(
   }
 );
 
-// Associations
-
 module.exports = NeededProductModel;

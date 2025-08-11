@@ -28,7 +28,12 @@ module.exports = {
             allowNull: true,
           },
           balance: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
+            allowNull: false,
+            defaultValue: 0,
+          },
+          dollar_balance: {
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },

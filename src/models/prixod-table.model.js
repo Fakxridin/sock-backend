@@ -14,12 +14,22 @@ PrixodModel.init(
       allowNull: false,
     },
     total_overall_cost: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
     rasxod_summa: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    rasxod_summa_dollar: {
+      type: DataTypes.DECIMAL(12, 5),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    kurs_summa: {
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
@@ -62,20 +72,20 @@ PrixodTableModel.init(
       references: { model: "kontragent", key: "id" },
     },
     miqdor: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
     },
     product_cost: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
     },
     initial_cost: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
     },
     total_cost: {
-      type: DataTypes.DECIMAL(12, 2),
+      type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
     },
   },

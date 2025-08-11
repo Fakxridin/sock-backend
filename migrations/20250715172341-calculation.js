@@ -20,17 +20,32 @@ module.exports = {
             allowNull: false,
           },
           total_spent: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },
           selling_price: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
+            allowNull: false,
+            defaultValue: 0,
+          },
+          selling_price_som: {
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
+            allowNull: false,
+            defaultValue: 0,
+          },
+          total_spent_som: {
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
+            allowNull: false,
+            defaultValue: 0,
+          },
+          kurs_summa: {
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },
           qoldiq: {
-            type: Sequelize.DataTypes.DECIMAL(12, 2),
+            type: Sequelize.DataTypes.DECIMAL(12, 5),
             allowNull: false,
             defaultValue: 0,
           },

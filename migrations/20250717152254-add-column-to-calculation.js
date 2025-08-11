@@ -9,7 +9,7 @@ module.exports = {
         "food_shablon",
         "sklad1_qoldiq",
         {
-          type: Sequelize.DataTypes.DECIMAL(12, 2),
+          type: Sequelize.DataTypes.DECIMAL(12, 5),
           allowNull: false,
           defaultValue: 0,
         },
@@ -20,7 +20,7 @@ module.exports = {
         "food_shablon",
         "sklad2_qoldiq",
         {
-          type: Sequelize.DataTypes.DECIMAL(12, 2),
+          type: Sequelize.DataTypes.DECIMAL(12, 5),
           allowNull: false,
           defaultValue: 0,
         },

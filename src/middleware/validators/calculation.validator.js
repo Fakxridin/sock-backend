@@ -7,7 +7,13 @@ exports.CaclulationSchema = {
     total_spent: Joi.number().min(0).required().label("Total Spent"),
 
     selling_price: Joi.number().min(0).required().label("Selling Price"),
-
+    total_spent_som: Joi.number().min(0).required().label("Total Spent Som"),
+    total_spent: Joi.number().min(0).required().label("Total Spent "),
+    selling_price_som: Joi.number()
+      .min(0)
+      .required()
+      .label("Selling Price Som"),
+    kurs_summa: Joi.number().min(0).required().label("Kurs summa"),
     qoldiq: Joi.number().required().label("Stock"),
 
     sklad1_qoldiq: Joi.number().min(0).required().label("Sklad1 Stock"),
@@ -32,7 +38,13 @@ exports.CaclulationSchema = {
   update: Joi.object({
     name: Joi.string().required().min(2).max(100).label("Template Name"),
 
-    total_spent: Joi.number().min(0).required().label("Total Spent"),
+    total_spent_som: Joi.number().min(0).required().label("Total Spent Som"),
+    total_spent: Joi.number().min(0).required().label("Total Spent "),
+    selling_price_som: Joi.number()
+      .min(0)
+      .required()
+      .label("Selling Price Som"),
+    kurs_summa: Joi.number().min(0).required().label("Kurs summa"),
 
     selling_price: Joi.number().min(0).required().label("Selling Price"),
 

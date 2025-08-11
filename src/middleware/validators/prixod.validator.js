@@ -5,6 +5,11 @@ const prixodSchemas = {
     datetime: Joi.number().required().label("Date Time"),
     total_overall_cost: Joi.number().min(0).required().label("Total Cost"),
     rasxod_summa: Joi.number().min(0).optional().label("Rasxod Summa"), // Optional in creation
+    kurs_summa: Joi.number().min(0).optional().label("Kurs Summa"),
+    rasxod_summa_dollar: Joi.number()
+      .min(0)
+      .optional()
+      .label("Rasxod Summa Dollar"),
     comment: Joi.string().allow("", null),
     prixod_table: Joi.array()
       .items(
@@ -25,6 +30,11 @@ const prixodSchemas = {
     datetime: Joi.number().required().label("Date Time"),
     total_overall_cost: Joi.number().min(0).required().label("Total Cost"),
     rasxod_summa: Joi.number().min(0).optional().label("Rasxod Summa"), // Optional in update
+    rasxod_summa_dollar: Joi.number()
+      .min(0)
+      .optional()
+      .label("Rasxod Summa Dolar"),
+    kurs_summa: Joi.number().min(0).optional().label("Kurs Summa"),
     comment: Joi.string().allow("", null),
     prixod_table: Joi.array()
       .items(
