@@ -15,6 +15,8 @@ const {
   TransactionModel,
   TikishModel,
   DazmolModel,
+  SalaryRegisterModel,
+  SalaryGiveModel,
 
   AverloModel,
 } = require("./index");
@@ -199,4 +201,20 @@ UserModel.hasMany(AverloModel, { foreignKey: "user_id", as: "averlolar" });
 FoodShablonModel.hasMany(AverloModel, {
   foreignKey: "shablon_id",
   as: "averlolar",
+});
+WorkerModel.hasMany(SalaryRegisterModel, {
+  foreignKey: "worker_id",
+  as: "salaryRegisters",
+});
+SalaryRegisterModel.belongsTo(WorkerModel, {
+  foreignKey: "worker_id",
+  as: "worker",
+});
+SalaryGiveModel.belongsTo(WorkerModel, {
+  foreignKey: "worker_id",
+  as: "worker",
+});
+WorkerModel.hasMany(SalaryGiveModel, {
+  foreignKey: "worker_id",
+  as: "salaryGives",
 });

@@ -3,6 +3,8 @@ const UpakovkaModel = require("../models/upakovka.model");
 const FoodShablonModel = require("../models/calculation.model");
 const WorkerModel = require("../models/worker.model");
 const HttpException = require("../utils/HttpException.utils");
+const SalaryRegisterModel = require("../models/salary-register.model");
+const MarkedCostModel = require("../models/marked_cost.model");
 const BaseController = require("./BaseController");
 
 class UpakovkaController extends BaseController {
@@ -40,6 +42,40 @@ class UpakovkaController extends BaseController {
       if (worker) {
         worker.bezakdan_soni = new Decimal(worker.bezakdan_soni || 0)
           .plus(miqdor)
+          .toNumber();
+        await worker.save({ transaction });
+      }
+
+      // Create a Salary Register record
+      await SalaryRegisterModel.create(
+        {
+          worker_id: worker_id,
+          upakovka_soni: miqdor, // Upakovka miqdori
+          tikish_soni: 0, // Tikish miqdori
+          averlo_soni: 0, // Averlo miqdori
+          dazmol_soni: 0, // Dazmol miqdori
+          datetime: Math.floor(Date.now() / 1000), // Unix timestamp
+        },
+        { transaction }
+      );
+
+      // If worker.is_fixed is false, add the cost to the worker's total_balance
+      if (!worker.is_fixed) {
+        // Get the MarkedCost from the database
+        const markedCost = await MarkedCostModel.findOne({
+          where: { id: 1 }, // Example: modify this as needed
+        });
+
+        if (!markedCost) {
+          throw new HttpException(404, "MarkedCost topilmadi");
+        }
+
+        // Calculate the cost based on upakovka miqdor
+        const upakovkaCost = new Decimal(markedCost.upakovka_cost).mul(miqdor);
+
+        // Update worker's total_balance
+        worker.total_balance = new Decimal(worker.total_balance || 0)
+          .plus(upakovkaCost)
           .toNumber();
         await worker.save({ transaction });
       }
@@ -93,6 +129,40 @@ class UpakovkaController extends BaseController {
       Object.assign(upakovka, { shablon_id, miqdor, worker_id, user_id });
       await upakovka.save({ transaction });
 
+      await SalaryRegisterModel.update(
+        {
+          upakovka_soni: miqdor, // Upakovka miqdori yangilandi
+          tikish_soni: 0, // Tikish miqdori 0
+          averlo_soni: 0, // Averlo miqdori 0
+          dazmol_soni: 0, // Dazmol miqdori 0
+        },
+        {
+          where: { worker_id: worker_id },
+          transaction,
+        }
+      );
+
+      // If worker.is_fixed is false, update the total_balance
+      if (!worker.is_fixed) {
+        // Get the MarkedCost from the database
+        const markedCost = await MarkedCostModel.findOne({
+          where: { id: 1 }, // Example: modify this as needed
+        });
+
+        if (!markedCost) {
+          throw new HttpException(404, "MarkedCost topilmadi");
+        }
+
+        // Calculate the cost based on upakovka miqdor
+        const upakovkaCost = new Decimal(markedCost.upakovka_cost).mul(miqdor);
+
+        // Update worker's total_balance
+        worker.total_balance = new Decimal(worker.total_balance || 0)
+          .plus(upakovkaCost)
+          .toNumber();
+        await worker.save({ transaction });
+      }
+
       await transaction.commit();
       res.send(upakovka);
     } catch (err) {
@@ -130,6 +200,19 @@ class UpakovkaController extends BaseController {
           .toNumber();
         await worker.save({ transaction });
       }
+
+      await SalaryRegisterModel.update(
+        {
+          upakovka_soni: 0, // Upakovka miqdori 0 ga yangilandi
+          tikish_soni: 0, // Tikish miqdori 0
+          averlo_soni: 0, // Averlo miqdori 0
+          dazmol_soni: 0, // Dazmol miqdori 0
+        },
+        {
+          where: { worker_id: upakovka.worker_id },
+          transaction,
+        }
+      );
 
       await upakovka.destroy({ transaction });
       await transaction.commit();

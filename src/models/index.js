@@ -16,6 +16,8 @@ const TikishModel = require("./tikish.model");
 const DazmolModel = require("./dazmol.model");
 const UpakovkaModel = require("./dazmol.model");
 const AverloModel = require("./averlo.model");
+const SalaryRegisterModel = require("./salary-register.model");
+const SalaryGiveModel = require("./salary_give.model");
 module.exports = {
   sequelize,
 
@@ -35,4 +37,6 @@ module.exports = {
   DazmolModel,
   UpakovkaModel,
   AverloModel,
+  SalaryRegisterModel,
+  SalaryGiveModel,
 };

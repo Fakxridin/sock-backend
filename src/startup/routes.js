@@ -19,6 +19,8 @@ const dazmolRouter = require("../routes/dazmol.route");
 const upakovkaRouter = require("../routes/upakovka.router");
 const kursRouter = require("../routes/kurs.route");
 const markedcostRouter = require("../routes/markedcost.route");
+const salarygiveRouter = require("../routes/salary.give.route");
+const salaryRegisterRouter = require("../routes/salary.register.route");
 const HttpException = require("../utils/HttpException.utils");
 
 module.exports = async function (app) {
@@ -50,6 +52,8 @@ module.exports = async function (app) {
   app.use(`/api/v1/upakovka`, upakovkaRouter);
   app.use(`/api/v1/kurs`, kursRouter);
   app.use(`/api/v1/marked-cost`, markedcostRouter);
+  app.use(`/api/v1/salary-give`, salarygiveRouter);
+  app.use(`/api/v1/salary-register`, salaryRegisterRouter);
   app.all("*", (req, res, next) => {
     const err = new HttpException(404, req.mf("Endpoint not found"));
     next(err);

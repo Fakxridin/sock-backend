@@ -4,9 +4,10 @@ const FoodShablonModel = require("../models/calculation.model");
 const NeededProductModel = require("../models/needed-product.model");
 const ProductModel = require("../models/product.model");
 const WorkerModel = require("../models/worker.model");
+const SalaryRegisterModel = require("../models/salary-register.model");
 const HttpException = require("../utils/HttpException.utils");
 const BaseController = require("./BaseController");
-
+const MarkedCostModel = require("../models/marked_cost.model");
 class TikishController extends BaseController {
   create = async (req, res, next) => {
     this.checkValidation(req);
@@ -20,6 +21,7 @@ class TikishController extends BaseController {
     const transaction = await TikishModel.sequelize.transaction();
 
     try {
+      // Ingredients miqdorlarini tekshirish
       for (const ing of shablon.ingredients) {
         const totalMiqdor = new Decimal(ing.miqdor).mul(miqdor);
         const product = await ProductModel.findByPk(ing.product_id);
@@ -38,20 +40,56 @@ class TikishController extends BaseController {
         await product.save({ transaction });
       }
 
+      // Shablon qoldig'ini yangilash
       shablon.bishish_qoldiq = new Decimal(shablon.bishish_qoldiq || 0)
-        .plus(miqdor) // yoki .minus(tikish.miqdor) delete'da
+        .plus(miqdor)
         .toNumber();
       await shablon.save({ transaction });
 
+      // Tikish yaratish
       const tikish = await TikishModel.create(
         { shablon_id, miqdor, worker_id, user_id },
         { transaction }
       );
 
+      // Workerning `stanokdan_soni`ni yangilash
       const worker = await WorkerModel.findByPk(worker_id);
       if (worker) {
         worker.stanokdan_soni = new Decimal(worker.stanokdan_soni || 0)
           .plus(miqdor)
+          .toNumber();
+        await worker.save({ transaction });
+      }
+
+      // `SalaryRegisterModel`ga yozish (ishchi ma'lumotlarini saqlash)
+      await SalaryRegisterModel.create(
+        {
+          worker_id: worker_id,
+          tikish_soni: miqdor, // Tikish miqdori
+          averlo_soni: 0, // Averlo miqdori
+          upakovka_soni: 0, // Upakovka miqdori
+          dazmol_soni: 0, // Dazmol miqdori
+          datetime: Math.floor(Date.now() / 1000), // Unix timestamp
+        },
+        { transaction }
+      );
+
+      // Agar worker `is_fixed` false bo'lsa, `total_balance`ga `tikish_cost` qo'shish
+      if (!worker.is_fixed) {
+        // MarkedCostModel'dan tikish_costni olish
+        const markedCost = await MarkedCostModel.findOne({
+          where: { id: 1 }, // idni o'zgartirishingiz mumkin
+        });
+
+        if (!markedCost) {
+          throw new HttpException(404, "MarkedCost topilmadi");
+        }
+
+        const tikishCost = new Decimal(markedCost.tikish_cost).mul(miqdor);
+
+        // Workerga balansni qo‘shish
+        worker.total_balance = new Decimal(worker.total_balance || 0)
+          .plus(tikishCost)
           .toNumber();
         await worker.save({ transaction });
       }
@@ -99,19 +137,55 @@ class TikishController extends BaseController {
         await product.save({ transaction });
       }
 
+      // Shablon qoldig‘ini yangilash
       shablon.bishish_qoldiq = new Decimal(shablon.bishish_qoldiq || 0)
         .plus(miqdor) // yoki .minus(tikish.miqdor) delete'da
         .toNumber();
       await shablon.save({ transaction });
 
+      // Workerni yangilash
       const worker = await WorkerModel.findByPk(worker_id);
       if (worker) {
         worker.stanokdan_soni = new Decimal(worker.stanokdan_soni || 0)
           .plus(diff)
           .toNumber();
         await worker.save({ transaction });
+
+        // `SalaryRegisterModel`ga yozish
+        await SalaryRegisterModel.create(
+          {
+            worker_id: worker_id,
+            tikish_soni: miqdor, // Tikish miqdori
+            averlo_soni: 0, // Averlo miqdori
+            upakovka_soni: 0, // Upakovka miqdori
+            dazmol_soni: 0, // Dazmol miqdori
+            datetime: Math.floor(Date.now() / 1000), // Unix timestamp
+          },
+          { transaction }
+        );
+
+        // Agar worker `is_fixed` false bo‘lsa, workerga balansni qo‘shish
+        if (!worker.is_fixed) {
+          // MarkedCostModel'dan tikish_costni olish
+          const markedCost = await MarkedCostModel.findOne({
+            where: { id: 1 }, // idni o'zgartirishingiz mumkin
+          });
+
+          if (!markedCost) {
+            throw new HttpException(404, "MarkedCost topilmadi");
+          }
+
+          const tikishCost = new Decimal(markedCost.tikish_cost).mul(miqdor);
+
+          // Workerga balansni qo‘shish
+          worker.total_balance = new Decimal(worker.total_balance || 0)
+            .plus(tikishCost)
+            .toNumber();
+          await worker.save({ transaction });
+        }
       }
 
+      // Tikishni yangilash
       Object.assign(tikish, { shablon_id, miqdor, worker_id, user_id });
       await tikish.save({ transaction });
 
