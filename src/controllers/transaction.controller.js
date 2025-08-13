@@ -138,13 +138,30 @@ class TransactionController extends BaseController {
       return res.send({ message: "Bu transaction rad etilgan" });
 
     // Mahsulotlar o‘tkaziladi
-    for (const p of transaction.products) {
-      const miqdor = Number(p.miqdor);
+    for (let p of transaction.products) {
+      // Change `const` to `let`
+      let miqdor = Number(p.miqdor); // Change `const` to `let` to allow reassignment
 
       // ✅ PRODUCT
       if (p.product_id) {
         const product = await ProductModel.findByPk(p.product_id);
         if (product) {
+          // Check if there is enough stock in the source warehouse
+          if (
+            transaction.qayerdan === "Sklad1" &&
+            product.sklad1_qoldiq < miqdor
+          ) {
+            // If not enough stock, use the available amount
+            miqdor = product.sklad1_qoldiq;
+          } else if (
+            transaction.qayerdan === "Sklad2" &&
+            product.sklad2_qoldiq < miqdor
+          ) {
+            // If not enough stock, use the available amount
+            miqdor = product.sklad2_qoldiq;
+          }
+
+          // Perform the transfer
           if (
             transaction.qayerdan === "Sklad1" &&
             transaction.qayerga === "Sklad2"
@@ -166,6 +183,22 @@ class TransactionController extends BaseController {
       if (p.food_shablon_id) {
         const shablon = await FoodShablonModel.findByPk(p.food_shablon_id);
         if (shablon) {
+          // Check if there is enough stock in the source warehouse
+          if (
+            transaction.qayerdan === "Sklad1" &&
+            shablon.sklad1_qoldiq < miqdor
+          ) {
+            // If not enough stock, use the available amount
+            miqdor = shablon.sklad1_qoldiq;
+          } else if (
+            transaction.qayerdan === "Sklad2" &&
+            shablon.sklad2_qoldiq < miqdor
+          ) {
+            // If not enough stock, use the available amount
+            miqdor = shablon.sklad2_qoldiq;
+          }
+
+          // Perform the transfer
           if (
             transaction.qayerdan === "Sklad1" &&
             transaction.qayerga === "Sklad2"
