@@ -4,12 +4,21 @@ const {
   ProductModel,
   FoodShablonModel,
   UserModel,
+  UnitModel,
 } = require("../models");
 
 const HttpException = require("../utils/HttpException.utils");
 const BaseController = require("./BaseController");
 const { Op } = require("sequelize");
-
+function attachUnitName(transactions) {
+  return transactions.map((t) => {
+    const products = (t.products || []).map((p) => ({
+      ...p.toJSON(),
+      unit_name: p.product && p.product.unit ? p.product.unit.name : null,
+    }));
+    return { ...t.toJSON(), products };
+  });
+}
 class TransactionController extends BaseController {
   // 🔹 GET ALL
   getAll = async (req, res, next) => {
@@ -17,24 +26,49 @@ class TransactionController extends BaseController {
       include: [
         { model: UserModel, as: "skladchi" },
         { model: UserModel, as: "oluvchi" },
-        { model: TransactionProductModel, as: "products" },
+        {
+          model: TransactionProductModel,
+          as: "products",
+          include: [
+            {
+              model: ProductModel,
+              as: "product",
+              attributes: ["id"], // kifoya
+              include: [{ model: UnitModel, as: "unit", attributes: ["name"] }],
+            },
+          ],
+        },
       ],
       order: [["createdAt", "DESC"]],
     });
-    res.send(list);
+
+    // MUHIM: to'g'ridan-to'g'ri listni jo'natmang — mapping qiling
+    res.send(attachUnitName(list));
   };
 
   // 🔹 GET BY ID
   getById = async (req, res, next) => {
     const transaction = await TransactionModel.findByPk(req.params.id, {
       include: [
-        { model: TransactionProductModel, as: "products" },
+        {
+          model: TransactionProductModel,
+          as: "products",
+          include: [
+            {
+              model: ProductModel,
+              as: "product",
+              attributes: ["id"],
+              include: [{ model: UnitModel, as: "unit", attributes: ["name"] }],
+            },
+          ],
+        },
         { model: UserModel, as: "skladchi" },
         { model: UserModel, as: "oluvchi" },
       ],
     });
+
     if (!transaction) throw new HttpException(404, "Topilmadi");
-    res.send(transaction);
+    res.send(attachUnitName([transaction])[0]);
   };
 
   // 🔹 CREATE
@@ -256,23 +290,46 @@ class TransactionController extends BaseController {
       include: [
         { model: UserModel, as: "skladchi" },
         { model: UserModel, as: "oluvchi" },
-        { model: TransactionProductModel, as: "products" },
+        {
+          model: TransactionProductModel,
+          as: "products",
+          include: [
+            {
+              model: ProductModel,
+              as: "product",
+              attributes: ["id"],
+              include: [{ model: UnitModel, as: "unit", attributes: ["name"] }],
+            },
+          ],
+        },
       ],
       order: [["createdAt", "DESC"]],
     });
-    res.send(list);
+    res.send(attachUnitName(list));
   };
+
   getFromSklad2 = async (req, res, next) => {
     const list = await TransactionModel.findAll({
       where: { qayerdan: "Sklad2" },
       include: [
         { model: UserModel, as: "skladchi" },
         { model: UserModel, as: "oluvchi" },
-        { model: TransactionProductModel, as: "products" },
+        {
+          model: TransactionProductModel,
+          as: "products",
+          include: [
+            {
+              model: ProductModel,
+              as: "product",
+              attributes: ["id"],
+              include: [{ model: UnitModel, as: "unit", attributes: ["name"] }],
+            },
+          ],
+        },
       ],
       order: [["createdAt", "DESC"]],
     });
-    res.send(list);
+    res.send(attachUnitName(list));
   };
 }
 
