@@ -19,6 +19,8 @@ const {
   SalaryGiveModel,
 
   AverloModel,
+  KassaModel,
+  KontragentPayModel,
 } = require("./index");
 const UpakovkaModel = require("./upakovka.model");
 
@@ -212,9 +214,38 @@ SalaryRegisterModel.belongsTo(WorkerModel, {
 });
 SalaryGiveModel.belongsTo(WorkerModel, {
   foreignKey: "worker_id",
-  as: "worker",
+  // as: "worker",
 });
 WorkerModel.hasMany(SalaryGiveModel, {
   foreignKey: "worker_id",
-  as: "salaryGives",
+  // as: "salaryGives",
+});
+KassaModel.hasMany(KontragentPayModel, {
+  foreignKey: "kassa_id",
+  // as: "kontragentPays",
+});
+
+KontragentPayModel.belongsTo(KassaModel, {
+  foreignKey: "kassa_id",
+  // as: "kassa",
+});
+
+// Kontragent ↔ KontragentPay
+KontragentModel.hasMany(KontragentPayModel, {
+  foreignKey: "kontragent_id",
+  // as: "kontragentPays",
+});
+
+KontragentPayModel.belongsTo(KontragentModel, {
+  foreignKey: "kontragent_id",
+  // as: "kontragent",
+});
+KassaModel.hasMany(SalaryGiveModel, {
+  foreignKey: "kassa_id",
+  // as: "kontragentPays",
+});
+
+SalaryGiveModel.belongsTo(KassaModel, {
+  foreignKey: "kassa_id",
+  // as: "kassa",
 });

@@ -1,9 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../db/db-sequelize");
 
-class SalaryGiveModel extends Model {}
+class KontragentPayModel extends Model {}
 
-SalaryGiveModel.init(
+KontragentPayModel.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -11,28 +11,15 @@ SalaryGiveModel.init(
       primaryKey: true,
       allowNull: false,
     },
-    worker_id: {
+    kontragent_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "workers", // Foreign key to workers table
+        model: "kontragent",
         key: "id",
       },
-      onDelete: "CASCADE", // If a worker is deleted, their salary records will also be deleted
-    },
-    summa: {
-      type: DataTypes.DECIMAL(12, 5),
-      allowNull: false,
-      defaultValue: 0,
-    },
-    datetime: {
-      type: DataTypes.INTEGER,
-      allowNull: false, // Unix timestamp
-    },
-    // New Columns
-    comment: {
-      type: DataTypes.STRING,
-      allowNull: true,
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
     },
     kassa_id: {
       type: DataTypes.INTEGER,
@@ -45,45 +32,46 @@ SalaryGiveModel.init(
       onDelete: "CASCADE",
     },
     user_fullname: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     kurs_summa: {
-      type: DataTypes.DECIMAL(12, 5),
+      type: DataTypes.DECIMAL(18, 5),
       allowNull: false,
       defaultValue: 0,
     },
     dollar_summa: {
-      type: DataTypes.DECIMAL(12, 5),
+      type: DataTypes.DECIMAL(18, 5),
       allowNull: false,
       defaultValue: 0,
     },
     som_summa: {
-      type: DataTypes.DECIMAL(12, 5),
+      type: DataTypes.DECIMAL(18, 5),
       allowNull: false,
       defaultValue: 0,
     },
     total_dollar_summa: {
-      type: DataTypes.DECIMAL(12, 5),
+      type: DataTypes.DECIMAL(18, 5),
       allowNull: false,
       defaultValue: 0,
     },
     total_som_summa: {
-      type: DataTypes.DECIMAL(12, 5),
+      type: DataTypes.DECIMAL(18, 5),
       allowNull: false,
       defaultValue: 0,
     },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
-    deletedAt: DataTypes.DATE,
+    comment: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   },
   {
     sequelize,
-    modelName: "SalaryGiveModel",
-    tableName: "salary_give",
+    modelName: "KontragentPayModel",
+    tableName: "kontragent_pay",
     timestamps: true,
-    paranoid: true, // Enable soft deletes
+    paranoid: true,
   }
 );
 
-module.exports = SalaryGiveModel;
+module.exports = KontragentPayModel;
