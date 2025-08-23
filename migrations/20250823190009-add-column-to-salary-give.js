@@ -86,6 +86,17 @@ module.exports = {
         { transaction }
       );
 
+      // Add the comment column
+      await queryInterface.addColumn(
+        "salary_give", // table name
+        "comment",
+        {
+          type: Sequelize.DataTypes.STRING,
+          allowNull: true,
+        },
+        { transaction }
+      );
+
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();
@@ -97,7 +108,6 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
     try {
       // Remove the columns if we roll back
-
       await queryInterface.removeColumn("salary_give", "kassa_id", {
         transaction,
       });
@@ -117,6 +127,11 @@ module.exports = {
         transaction,
       });
       await queryInterface.removeColumn("salary_give", "total_som_summa", {
+        transaction,
+      });
+
+      // Remove the comment column
+      await queryInterface.removeColumn("salary_give", "comment", {
         transaction,
       });
 
