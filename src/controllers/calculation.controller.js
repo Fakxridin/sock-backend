@@ -24,17 +24,6 @@ function parseIngredients(raw) {
   // boshqa barcha hollarda
   return [];
 }
-async function withReprepareRetry(fn, retries = 2) {
-  try {
-    return await fn();
-  } catch (e) {
-    const code = e?.original?.errno || e?.original?.code || e?.errno;
-    if ((code === 1615 || e?.message?.includes("re-prepared")) && retries > 0) {
-      return withReprepareRetry(fn, retries - 1);
-    }
-    throw e;
-  }
-}
 
 class FoodShablonController extends BaseController {
   // 🔹 Get all templates
@@ -163,80 +152,70 @@ class FoodShablonController extends BaseController {
   };
   // 🔹 Update
   // 🔹 Update
-
   update = async (req, res, next) => {
     this.checkValidation(req);
 
-    await withReprepareRetry(async () => {
-      return await FoodShablonModel.sequelize.transaction(async (t) => {
-        const shablon = await FoodShablonModel.findByPk(req.params.id, {
-          transaction: t,
-        });
-        if (!shablon) throw new HttpException(404, req.mf("data not found"));
+    const shablon = await FoodShablonModel.findByPk(req.params.id);
+    if (!shablon) throw new HttpException(404, req.mf("data not found"));
 
-        const ingredientsArr = parseIngredients(req.body.ingredients);
+    // ⭐️ NORMALIZATSIYA
+    const ingredientsArr = parseIngredients(req.body.ingredients);
 
-        const {
-          name,
-          selling_price,
-          qoldiq,
-          total_spent_som,
-          selling_price_som,
-          kurs_summa,
-          sklad1_qoldiq = 0,
-          sklad2_qoldiq = 0,
-          bishish_qoldiq = 0,
-          averlo_qoldiq = 0,
-          dazmol_qoldiq = 0,
-        } = req.body;
+    const {
+      name,
+      selling_price,
+      qoldiq,
+      total_spent_som,
+      selling_price_som,
+      kurs_summa,
+      sklad1_qoldiq = 0,
+      sklad2_qoldiq = 0,
+      bishish_qoldiq = 0,
+      averlo_qoldiq = 0,
+      dazmol_qoldiq = 0,
+    } = req.body;
 
-        const total_spent = ingredientsArr.reduce(
-          (acc, i) => acc + Number(i?.summa || 0),
-          0
-        );
+    const total_spent = ingredientsArr.reduce(
+      (acc, i) => acc + Number(i?.summa || 0),
+      0
+    );
 
-        if (req.file) {
-          if (shablon.img_name) deleteIfExists(shablon.img_name);
-          shablon.img_name = req.file.filename;
-        }
+    if (req.file) {
+      if (shablon.img_name) deleteIfExists(shablon.img_name);
+      shablon.img_name = req.file.filename;
+    }
 
-        Object.assign(shablon, {
-          name,
-          total_spent: Number(total_spent) || 0,
-          selling_price: Number(selling_price) || 0,
-          total_spent_som: Number(total_spent_som) || 0,
-          selling_price_som: Number(selling_price_som) || 0,
-          kurs_summa: Number(kurs_summa) || 0,
-          qoldiq: Number(qoldiq) || 0,
-          sklad1_qoldiq: Number(sklad1_qoldiq) || 0,
-          sklad2_qoldiq: Number(sklad2_qoldiq) || 0,
-          bishish_qoldiq: Number(bishish_qoldiq) || 0,
-          averlo_qoldiq: Number(averlo_qoldiq) || 0,
-          dazmol_qoldiq: Number(dazmol_qoldiq) || 0,
-        });
-        await shablon.save({ transaction: t });
-
-        // ingredients’ni to‘liq qayta yozish: destroy + bulkCreate (hammasi bir transaction)
-        await NeededProductModel.destroy({
-          where: { food_shablon_id: shablon.id },
-          transaction: t,
-        });
-
-        if (ingredientsArr.length) {
-          const items = ingredientsArr.map((i) => ({
-            food_shablon_id: shablon.id,
-            product_id: Number(i.product_id),
-            miqdor: Number(i.miqdor),
-            summa: Number(i.summa),
-          }));
-          await NeededProductModel.bulkCreate(items, { transaction: t });
-        }
-
-        // shu transaction ichida qaytarish o‘rniga, tashqarida getById chaqiramiz:
-      });
+    Object.assign(shablon, {
+      name,
+      total_spent: Number(total_spent) || 0,
+      selling_price: Number(selling_price) || 0,
+      total_spent_som: Number(total_spent_som) || 0,
+      selling_price_som: Number(selling_price_som) || 0,
+      kurs_summa: Number(kurs_summa) || 0,
+      qoldiq: Number(qoldiq) || 0,
+      sklad1_qoldiq: Number(sklad1_qoldiq) || 0,
+      sklad2_qoldiq: Number(sklad2_qoldiq) || 0,
+      bishish_qoldiq: Number(bishish_qoldiq) || 0,
+      averlo_qoldiq: Number(averlo_qoldiq) || 0,
+      dazmol_qoldiq: Number(dazmol_qoldiq) || 0,
     });
 
-    // transaction tugagach yangilangan holatni qaytaramiz
+    await shablon.save();
+
+    // ingredients’ni to‘liq qayta yozish
+    await NeededProductModel.destroy({
+      where: { food_shablon_id: shablon.id },
+    });
+    if (ingredientsArr.length) {
+      const items = ingredientsArr.map((i) => ({
+        food_shablon_id: shablon.id,
+        product_id: Number(i.product_id),
+        miqdor: Number(i.miqdor),
+        summa: Number(i.summa),
+      }));
+      await NeededProductModel.bulkCreate(items);
+    }
+
     return this.getById(req, res, next);
   };
 
