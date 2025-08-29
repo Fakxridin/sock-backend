@@ -40,7 +40,6 @@ FoodShablonModel.init(
       allowNull: false,
       defaultValue: 0,
     },
-
     qoldiq: {
       type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
@@ -70,6 +69,11 @@ FoodShablonModel.init(
       type: DataTypes.DECIMAL(12, 5),
       allowNull: false,
       defaultValue: 0,
+    },
+    // New field for image name
+    img_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true, // Assuming it's optional
     },
   },
   {

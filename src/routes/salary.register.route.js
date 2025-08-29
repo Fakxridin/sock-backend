@@ -23,7 +23,11 @@ router.get(
   auth(),
   awaitHandlerFactory(SalaryRegisterController.getById)
 );
-
+router.post(
+  "/all-number",
+  auth(),
+  awaitHandlerFactory(SalaryRegisterController.getByRangeForAllWorkers)
+);
 // Create a new worker
 router.post("/", auth(), awaitHandlerFactory(SalaryRegisterController.create));
 

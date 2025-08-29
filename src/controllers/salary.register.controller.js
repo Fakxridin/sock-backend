@@ -106,6 +106,70 @@ class SalaryRegisterController extends BaseController {
       },
     });
   };
+  getByRangeForAllWorkers = async (req, res, next) => {
+    const { start_date, end_date } = req.body;
+
+    if (!start_date || !end_date) {
+      throw new HttpException(400, "Start and End date are required");
+    }
+
+    // Fetch all workers
+    const workers = await WorkerModel.findAll();
+
+    // Fetch salary records within the date range
+    const salaryRegisters = await SalaryRegisterModel.findAll({
+      where: {
+        datetime: {
+          [Op.between]: [start_date, end_date],
+        },
+      },
+      include: [{ model: WorkerModel, as: "worker" }],
+      order: [["datetime", "ASC"]],
+    });
+
+    // Initialize an object to store the totals for each worker
+    const workerTotals = {};
+
+    // Loop through each salary register and accumulate the totals for each worker
+    salaryRegisters.forEach((register) => {
+      const workerId = register.worker.id;
+
+      // If worker doesn't exist in workerTotals, initialize the values
+      if (!workerTotals[workerId]) {
+        workerTotals[workerId] = {
+          worker: register.worker, // Store full worker details
+          tikish_soni: 0,
+          averlo_soni: 0,
+          dazmol_soni: 0,
+          upakovka_soni: 0,
+        };
+      }
+
+      // Accumulate values for each worker
+      workerTotals[workerId].tikish_soni += register.tikish_soni || 0;
+      workerTotals[workerId].averlo_soni += register.averlo_soni || 0;
+      workerTotals[workerId].dazmol_soni += register.dazmol_soni || 0;
+      workerTotals[workerId].upakovka_soni += register.upakovka_soni || 0;
+    });
+
+    // Add workers with no salary records to workerTotals (set their totals to 0)
+    workers.forEach((worker) => {
+      if (!workerTotals[worker.id]) {
+        workerTotals[worker.id] = {
+          worker: worker, // Include full worker details
+          tikish_soni: 0,
+          averlo_soni: 0,
+          dazmol_soni: 0,
+          upakovka_soni: 0,
+        };
+      }
+    });
+
+    // Convert the workerTotals object to an array for the response
+    const result = Object.values(workerTotals);
+
+    res.send(result);
+  };
 
   create = async (req, res, next) => {
     this.checkValidation(req);

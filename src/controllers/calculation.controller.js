@@ -1,8 +1,29 @@
+const path = require("path");
+const fs = require("fs");
 const FoodShablonModel = require("../models/calculation.model");
 const NeededProductModel = require("../models/needed-product.model");
 const ProductModel = require("../models/product.model");
 const HttpException = require("../utils/HttpException.utils");
 const BaseController = require("./BaseController");
+const { deleteIfExists } = require("../utils/file.utils");
+// helpers: controller faylining tepasida qo'ysangiz ham bo'ladi
+function parseIngredients(raw) {
+  // null/undefined → []
+  if (!raw) return [];
+  // allaqachon array bo'lsa
+  if (Array.isArray(raw)) return raw;
+  // string bo'lsa JSON parse qilib ko'ramiz
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  // boshqa barcha hollarda
+  return [];
+}
 
 class FoodShablonController extends BaseController {
   // 🔹 Get all templates
@@ -12,6 +33,7 @@ class FoodShablonController extends BaseController {
         { model: NeededProductModel, as: "ingredients", include: ["product"] },
       ],
       order: [["name", "ASC"]],
+      // agar modelda default bo'lmasa attributes bilan exclude qilishingiz mumkin
     });
 
     const formatted = shablons.map((s) => {
@@ -19,6 +41,7 @@ class FoodShablonController extends BaseController {
       return {
         id: json.id,
         name: json.name,
+        img_name: json.img_name || null, // ⬅️ qo'shildi
         total_spent: json.total_spent,
         total_spent_som: json.total_spent_som,
         selling_price_som: json.selling_price_som,
@@ -51,6 +74,7 @@ class FoodShablonController extends BaseController {
     res.send({
       id: json.id,
       name: json.name,
+      img_name: json.img_name || null, // ⬅️ qo'shildi
       total_spent_som: json.total_spent_som,
       selling_price_som: json.selling_price_som,
       kurs_summa: json.kurs_summa,
@@ -70,6 +94,9 @@ class FoodShablonController extends BaseController {
   create = async (req, res, next) => {
     this.checkValidation(req);
 
+    // ⭐️ NORMALIZATSIYA
+    const ingredientsArr = parseIngredients(req.body.ingredients);
+
     const {
       name,
       selling_price,
@@ -82,42 +109,48 @@ class FoodShablonController extends BaseController {
       bishish_qoldiq = 0,
       averlo_qoldiq = 0,
       dazmol_qoldiq = 0,
-      ingredients,
     } = req.body;
 
-    const total_spent = ingredients.reduce((acc, i) => {
-      return acc + Number(i.summa);
-    }, 0);
+    // string/number kelsa ham Number(...) bilan yutib olamiz
+    const total_spent = ingredientsArr.reduce(
+      (acc, i) => acc + Number(i?.summa || 0),
+      0
+    );
+
+    const newImgName = req.file ? req.file.filename : null;
 
     const shablon = await FoodShablonModel.create({
       name,
-      total_spent,
-      selling_price,
-      qoldiq,
-      total_spent_som,
-      selling_price_som,
-      kurs_summa,
-      sklad1_qoldiq,
-      sklad2_qoldiq,
-      bishish_qoldiq,
-      averlo_qoldiq,
-      dazmol_qoldiq,
+      img_name: newImgName,
+      total_spent: Number(total_spent) || 0,
+      selling_price: Number(selling_price) || 0,
+      qoldiq: Number(qoldiq) || 0,
+      total_spent_som: Number(total_spent_som) || 0,
+      selling_price_som: Number(selling_price_som) || 0,
+      kurs_summa: Number(kurs_summa) || 0,
+      sklad1_qoldiq: Number(sklad1_qoldiq) || 0,
+      sklad2_qoldiq: Number(sklad2_qoldiq) || 0,
+      bishish_qoldiq: Number(bishish_qoldiq) || 0,
+      averlo_qoldiq: Number(averlo_qoldiq) || 0,
+      dazmol_qoldiq: Number(dazmol_qoldiq) || 0,
     });
 
     if (!shablon) throw new HttpException(500, req.mf("Something went wrong"));
 
-    const items = ingredients.map((i) => ({
-      food_shablon_id: shablon.id,
-      product_id: i.product_id,
-      miqdor: i.miqdor,
-      summa: i.summa,
-    }));
-    await NeededProductModel.bulkCreate(items);
+    if (ingredientsArr.length) {
+      const items = ingredientsArr.map((i) => ({
+        food_shablon_id: shablon.id,
+        product_id: Number(i.product_id),
+        miqdor: Number(i.miqdor),
+        summa: Number(i.summa),
+      }));
+      await NeededProductModel.bulkCreate(items);
+    }
 
     req.params.id = shablon.id;
     return this.getById(req, res, next);
   };
-
+  // 🔹 Update
   // 🔹 Update
   update = async (req, res, next) => {
     this.checkValidation(req);
@@ -125,6 +158,9 @@ class FoodShablonController extends BaseController {
     const shablon = await FoodShablonModel.findByPk(req.params.id);
     if (!shablon) throw new HttpException(404, req.mf("data not found"));
 
+    // ⭐️ NORMALIZATSIYA
+    const ingredientsArr = parseIngredients(req.body.ingredients);
+
     const {
       name,
       selling_price,
@@ -137,40 +173,45 @@ class FoodShablonController extends BaseController {
       bishish_qoldiq = 0,
       averlo_qoldiq = 0,
       dazmol_qoldiq = 0,
-      ingredients,
     } = req.body;
 
-    const total_spent = ingredients?.reduce((acc, i) => {
-      return acc + Number(i.summa);
-    }, 0);
+    const total_spent = ingredientsArr.reduce(
+      (acc, i) => acc + Number(i?.summa || 0),
+      0
+    );
+
+    if (req.file) {
+      if (shablon.img_name) deleteIfExists(shablon.img_name);
+      shablon.img_name = req.file.filename;
+    }
 
     Object.assign(shablon, {
       name,
-      total_spent,
-      selling_price,
-      total_spent_som,
-      selling_price_som,
-      kurs_summa,
-      qoldiq,
-      sklad1_qoldiq,
-      sklad2_qoldiq,
-      bishish_qoldiq,
-      averlo_qoldiq,
-      dazmol_qoldiq,
+      total_spent: Number(total_spent) || 0,
+      selling_price: Number(selling_price) || 0,
+      total_spent_som: Number(total_spent_som) || 0,
+      selling_price_som: Number(selling_price_som) || 0,
+      kurs_summa: Number(kurs_summa) || 0,
+      qoldiq: Number(qoldiq) || 0,
+      sklad1_qoldiq: Number(sklad1_qoldiq) || 0,
+      sklad2_qoldiq: Number(sklad2_qoldiq) || 0,
+      bishish_qoldiq: Number(bishish_qoldiq) || 0,
+      averlo_qoldiq: Number(averlo_qoldiq) || 0,
+      dazmol_qoldiq: Number(dazmol_qoldiq) || 0,
     });
 
     await shablon.save();
 
-    if (ingredients) {
-      await NeededProductModel.destroy({
-        where: { food_shablon_id: shablon.id },
-      });
-
-      const items = ingredients.map((i) => ({
+    // ingredients’ni to‘liq qayta yozish
+    await NeededProductModel.destroy({
+      where: { food_shablon_id: shablon.id },
+    });
+    if (ingredientsArr.length) {
+      const items = ingredientsArr.map((i) => ({
         food_shablon_id: shablon.id,
-        product_id: i.product_id,
-        miqdor: i.miqdor,
-        summa: i.summa,
+        product_id: Number(i.product_id),
+        miqdor: Number(i.miqdor),
+        summa: Number(i.summa),
       }));
       await NeededProductModel.bulkCreate(items);
     }
@@ -183,12 +224,13 @@ class FoodShablonController extends BaseController {
     const shablon = await FoodShablonModel.findByPk(req.params.id);
     if (!shablon) throw new HttpException(404, req.mf("data not found"));
 
+    // Eski rasmni o‘chiramiz (agar bo‘lsa)
+    if (shablon.img_name) deleteIfExists(shablon.img_name);
+
     await shablon.destroy();
     res.send(req.mf("data has been deleted"));
   };
-  // 🔹 Get ingredients by shablon_id with sklad2_qoldiq
-  // 🔹 Get ingredients by shablon_id with sklad2_qoldiq
-  // 🔹 Get ingredients by shablon_id with sklad2_qoldiq
+
   // 🔹 Get ingredients by shablon_id with product sklad2_qoldiq
   getIngredientsByShablonId = async (req, res, next) => {
     const { shablon_id } = req.params;
@@ -202,7 +244,7 @@ class FoodShablonController extends BaseController {
               {
                 model: ProductModel,
                 as: "product",
-                attributes: ["id", "name", "sklad2_qoldiq"], // add sklad2_qoldiq to the attributes
+                attributes: ["id", "name", "sklad2_qoldiq"],
               },
             ],
           },
@@ -213,18 +255,18 @@ class FoodShablonController extends BaseController {
         return next(new HttpException(404, "Shablon topilmadi"));
       }
 
-      // Mapping ingredients with product data
       const ingredients = shablon.ingredients.map((ing) => ({
         product_id: ing.product_id,
-        product_name: ing.product.name, // Product name
+        product_name: ing.product?.name,
         miqdor: ing.miqdor,
         summa: ing.summa,
-        sklad2_qoldiq: ing.product.sklad2_qoldiq,
+        sklad2_qoldiq: ing.product?.sklad2_qoldiq,
       }));
 
       res.send({
         shablon_id: shablon.id,
         name: shablon.name,
+        img_name: shablon.img_name || null,
         ingredients,
       });
     } catch (error) {
