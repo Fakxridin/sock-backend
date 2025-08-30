@@ -31,6 +31,19 @@ WorkerAttendanceModel.init(
       allowNull: false,
       defaultValue: false,
     },
+    come_time: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    left_time: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    worked_minutes: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     sequelize,
