@@ -17,7 +17,8 @@ const {
   DazmolModel,
   SalaryRegisterModel,
   SalaryGiveModel,
-
+  KontragentShablonModel,
+  KontragentShablonProductModel,
   AverloModel,
   KassaModel,
   KontragentPayModel,
@@ -248,4 +249,42 @@ KassaModel.hasMany(SalaryGiveModel, {
 SalaryGiveModel.belongsTo(KassaModel, {
   foreignKey: "kassa_id",
   // as: "kassa",
+});
+KontragentModel.hasMany(KontragentShablonModel, {
+  foreignKey: "kontragent_id",
+  as: "shablonlar",
+});
+KontragentShablonModel.belongsTo(KontragentModel, {
+  foreignKey: "kontragent_id",
+  as: "kontragent",
+});
+
+// User ↔ KontragentShablon (creator/owner)
+UserModel.hasMany(KontragentShablonModel, {
+  foreignKey: "user_id",
+  as: "kontragentShablonlar",
+});
+KontragentShablonModel.belongsTo(UserModel, {
+  foreignKey: "user_id",
+  as: "user",
+});
+
+// KontragentShablon ↔ KontragentShablonProduct
+KontragentShablonModel.hasMany(KontragentShablonProductModel, {
+  foreignKey: "kontragent_shablon_id",
+  as: "products",
+});
+KontragentShablonProductModel.belongsTo(KontragentShablonModel, {
+  foreignKey: "kontragent_shablon_id",
+  as: "kontragent_shablon",
+});
+
+// KontragentShablonProduct ↔ FoodShablon (each line references a food shablon)
+KontragentShablonProductModel.belongsTo(FoodShablonModel, {
+  foreignKey: "shablon_id",
+  as: "shablon",
+});
+FoodShablonModel.hasMany(KontragentShablonProductModel, {
+  foreignKey: "shablon_id",
+  as: "kontragentShablonProducts",
 });

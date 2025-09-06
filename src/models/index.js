@@ -19,6 +19,8 @@ const AverloModel = require("./averlo.model");
 const SalaryRegisterModel = require("./salary-register.model");
 const SalaryGiveModel = require("./salary_give.model");
 const KassaModel = require("./kassa.model");
+const KontragentShablonModel = require("./kontragent-product.model");
+const KontragentShablonProductModel = require("./kontragent-product-table.model");
 const KontragentPayModel = require("./kontragentpay.model");
 module.exports = {
   sequelize,
@@ -43,4 +45,6 @@ module.exports = {
   SalaryGiveModel,
   KassaModel,
   KontragentPayModel,
+  KontragentShablonModel,
+  KontragentShablonProductModel,
 };

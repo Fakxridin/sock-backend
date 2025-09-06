@@ -23,6 +23,7 @@ const salarygiveRouter = require("../routes/salary.give.route");
 const salaryRegisterRouter = require("../routes/salary.register.route");
 const kassaRouter = require("../routes/kassa.route");
 const kontrangetnpayrouter = require("../routes/kontragentpay.route");
+const kontrangetshablonrouter = require("../routes/kontragent-shablon.route");
 const HttpException = require("../utils/HttpException.utils");
 
 module.exports = async function (app) {
@@ -58,6 +59,7 @@ module.exports = async function (app) {
   app.use(`/api/v1/salary-register`, salaryRegisterRouter);
   app.use(`/api/v1/kontragent-pay`, kontrangetnpayrouter);
   app.use(`/api/v1/kassa`, kassaRouter);
+  app.use(`/api/v1/kontragent-shablon`, kontrangetshablonrouter);
   app.all("*", (req, res, next) => {
     const err = new HttpException(404, req.mf("Endpoint not found"));
     next(err);
