@@ -70,6 +70,11 @@ FoodShablonModel.init(
       allowNull: false,
       defaultValue: 0,
     },
+    etiketika_qoldiq: {
+      type: DataTypes.DECIMAL(12, 5),
+      allowNull: false,
+      defaultValue: 0,
+    },
     // New field for image name
     img_name: {
       type: DataTypes.STRING(255),

@@ -53,6 +53,7 @@ class FoodShablonController extends BaseController {
         bishish_qoldiq: json.bishish_qoldiq,
         averlo_qoldiq: json.averlo_qoldiq,
         dazmol_qoldiq: json.dazmol_qoldiq,
+        etiketika_qoldiq: json.etiketika_qoldiq,
         ingredients: json.ingredients,
       };
     });
@@ -86,6 +87,7 @@ class FoodShablonController extends BaseController {
       bishish_qoldiq: json.bishish_qoldiq,
       averlo_qoldiq: json.averlo_qoldiq,
       dazmol_qoldiq: json.dazmol_qoldiq,
+      etiketika_qoldiq: json.etiketika_qoldiq,
       ingredients: json.ingredients,
     });
   };
@@ -109,6 +111,7 @@ class FoodShablonController extends BaseController {
       bishish_qoldiq = 0,
       averlo_qoldiq = 0,
       dazmol_qoldiq = 0,
+      etiketika_qoldiq = 0,
     } = req.body;
 
     // string/number kelsa ham Number(...) bilan yutib olamiz
@@ -133,6 +136,7 @@ class FoodShablonController extends BaseController {
       bishish_qoldiq: Number(bishish_qoldiq) || 0,
       averlo_qoldiq: Number(averlo_qoldiq) || 0,
       dazmol_qoldiq: Number(dazmol_qoldiq) || 0,
+      etiketika_qoldiq: Number(etiketika_qoldiq) || 0,
     });
 
     if (!shablon) throw new HttpException(500, req.mf("Something went wrong"));
@@ -173,6 +177,7 @@ class FoodShablonController extends BaseController {
       bishish_qoldiq = 0,
       averlo_qoldiq = 0,
       dazmol_qoldiq = 0,
+      etiketika_qoldiq = 0,
     } = req.body;
 
     const total_spent = ingredientsArr.reduce(
@@ -198,6 +203,7 @@ class FoodShablonController extends BaseController {
       bishish_qoldiq: Number(bishish_qoldiq) || 0,
       averlo_qoldiq: Number(averlo_qoldiq) || 0,
       dazmol_qoldiq: Number(dazmol_qoldiq) || 0,
+      etiketika_qoldiq: Number(etiketika_qoldiq) || 0,
     });
 
     await shablon.save();

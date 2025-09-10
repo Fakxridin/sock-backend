@@ -22,6 +22,7 @@ const KassaModel = require("./kassa.model");
 const KontragentShablonModel = require("./kontragent-product.model");
 const KontragentShablonProductModel = require("./kontragent-product-table.model");
 const KontragentPayModel = require("./kontragentpay.model");
+const EtiketikaModel = require("./etiketika.model");
 module.exports = {
   sequelize,
 
@@ -47,4 +48,5 @@ module.exports = {
   KontragentPayModel,
   KontragentShablonModel,
   KontragentShablonProductModel,
+  EtiketikaModel,
 };

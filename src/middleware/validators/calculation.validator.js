@@ -43,6 +43,7 @@ const numericCommon = {
   bishish_qoldiq: Joi.number().min(0).required().label("Boiling Stock"),
   averlo_qoldiq: Joi.number().min(0).required().label("Overlock Stock"),
   dazmol_qoldiq: Joi.number().min(0).required().label("Ironing Stock"),
+  etiketika_qoldiq: Joi.number().min(0).required().label("etiketika_qoldiq"),
 };
 
 exports.CaclulationSchema = {

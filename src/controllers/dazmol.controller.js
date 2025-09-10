@@ -53,6 +53,7 @@ class DazmolController extends BaseController {
           dazmol_soni: miqdor, // Dazmol miqdori
           tikish_soni: 0, // Tikish miqdori
           averlo_soni: 0, // Averlo miqdori
+          etiketika_soni: 0,
           upakovka_soni: 0, // Upakovka miqdori
           datetime: Math.floor(Date.now() / 1000), // Unix timestamp
         },
@@ -134,6 +135,7 @@ class DazmolController extends BaseController {
           dazmol_soni: miqdor, // Dazmol miqdori yangilandi
           tikish_soni: 0, // Tikish miqdori 0
           averlo_soni: 0, // Averlo miqdori 0
+          etiketika_soni: 0,
           upakovka_soni: 0, // Upakovka miqdori 0
         },
         {
@@ -206,6 +208,7 @@ class DazmolController extends BaseController {
           dazmol_soni: 0, // Dazmol miqdori 0 ga yangilandi
           tikish_soni: 0, // Tikish miqdori 0
           averlo_soni: 0, // Averlo miqdori 0
+          etiketika_soni: 0,
           upakovka_soni: 0, // Upakovka miqdori 0
         },
         {

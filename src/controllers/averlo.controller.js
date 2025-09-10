@@ -57,6 +57,7 @@ class AverloController extends BaseController {
           averlo_soni: miqdor, // Averlo miqdori
           tikish_soni: 0, // Tikish miqdori
           upakovka_soni: 0, // Upakovka miqdori
+          etiketika_soni: 0,
           dazmol_soni: 0, // Dazmol miqdori
           datetime: Math.floor(Date.now() / 1000), // Unix timestamp
         },
@@ -138,6 +139,7 @@ class AverloController extends BaseController {
           averlo_soni: miqdor, // Averlo miqdori yangilandi
           tikish_soni: 0, // Tikish miqdori 0
           upakovka_soni: 0, // Upakovka miqdori 0
+          etiketika_soni: 0,
           dazmol_soni: 0, // Dazmol miqdori 0
         },
         {
@@ -210,6 +212,7 @@ class AverloController extends BaseController {
           averlo_soni: 0, // Averlo miqdori 0 ga yangilandi
           tikish_soni: 0, // Tikish miqdori 0
           upakovka_soni: 0, // Upakovka miqdori 0
+          etiketika_soni: 0,
           dazmol_soni: 0, // Dazmol miqdori 0
         },
         {

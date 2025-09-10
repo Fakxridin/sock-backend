@@ -85,6 +85,10 @@ class SalaryRegisterController extends BaseController {
       (acc, register) => acc + register.dazmol_soni,
       0
     );
+    const totalEtiketikaSoni = salaryRegisters.reduce(
+      (acc, register) => acc + register.etiketika_soni,
+      0
+    );
     const totalUpakovkaSoni = salaryRegisters.reduce(
       (acc, register) => acc + register.upakovka_soni,
       0
@@ -101,6 +105,7 @@ class SalaryRegisterController extends BaseController {
       totals: {
         jami_tikish_soni: totalTikishSoni,
         jami_averlo_soni: totalAverloSoni,
+        jami_etiketika_soni: totalEtiketikaSoni,
         jami_dazmol_soni: totalDazmolSoni,
         jami_upakovka_soni: totalUpakovkaSoni,
       },
@@ -141,6 +146,7 @@ class SalaryRegisterController extends BaseController {
           tikish_soni: 0,
           averlo_soni: 0,
           dazmol_soni: 0,
+          etiketika_soni: 0,
           upakovka_soni: 0,
         };
       }
@@ -149,6 +155,7 @@ class SalaryRegisterController extends BaseController {
       workerTotals[workerId].tikish_soni += register.tikish_soni || 0;
       workerTotals[workerId].averlo_soni += register.averlo_soni || 0;
       workerTotals[workerId].dazmol_soni += register.dazmol_soni || 0;
+      workerTotals[workerId].etiketika_soni += register.etiketika_soni || 0;
       workerTotals[workerId].upakovka_soni += register.upakovka_soni || 0;
     });
 
@@ -160,6 +167,7 @@ class SalaryRegisterController extends BaseController {
           tikish_soni: 0,
           averlo_soni: 0,
           dazmol_soni: 0,
+          etiketika_soni: 0,
           upakovka_soni: 0,
         };
       }
@@ -179,6 +187,7 @@ class SalaryRegisterController extends BaseController {
       tikish_soni,
       averlo_soni,
       dazmol_soni,
+      etiketika_soni,
       upakovka_soni,
       datetime,
     } = req.body;
@@ -193,6 +202,7 @@ class SalaryRegisterController extends BaseController {
       tikish_soni,
       averlo_soni,
       dazmol_soni,
+      etiketika_soni,
       upakovka_soni,
       datetime,
     });
@@ -212,6 +222,7 @@ class SalaryRegisterController extends BaseController {
       worker_id,
       tikish_soni,
       averlo_soni,
+      etiketika_soni,
       dazmol_soni,
       upakovka_soni,
       datetime,
@@ -225,6 +236,7 @@ class SalaryRegisterController extends BaseController {
     Object.assign(salaryRegister, {
       worker_id,
       tikish_soni,
+      etiketika_soni,
       averlo_soni,
       dazmol_soni,
       upakovka_soni,

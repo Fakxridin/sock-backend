@@ -24,6 +24,7 @@ const salaryRegisterRouter = require("../routes/salary.register.route");
 const kassaRouter = require("../routes/kassa.route");
 const kontrangetnpayrouter = require("../routes/kontragentpay.route");
 const kontrangetshablonrouter = require("../routes/kontragent-shablon.route");
+const etiketikaRouter = require("../routes/etiketika.route");
 const HttpException = require("../utils/HttpException.utils");
 
 module.exports = async function (app) {
@@ -52,6 +53,7 @@ module.exports = async function (app) {
   app.use(`/api/v1/tikish`, tikishRouter);
   app.use(`/api/v1/averlo`, averloRouter);
   app.use(`/api/v1/dazmol`, dazmolRouter);
+  app.use(`/api/v1/etiketika`, etiketikaRouter);
   app.use(`/api/v1/upakovka`, upakovkaRouter);
   app.use(`/api/v1/kurs`, kursRouter);
   app.use(`/api/v1/marked-cost`, markedcostRouter);

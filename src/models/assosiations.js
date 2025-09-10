@@ -22,6 +22,7 @@ const {
   AverloModel,
   KassaModel,
   KontragentPayModel,
+  EtiketikaModel,
 } = require("./index");
 const UpakovkaModel = require("./upakovka.model");
 
@@ -287,4 +288,31 @@ KontragentShablonProductModel.belongsTo(FoodShablonModel, {
 FoodShablonModel.hasMany(KontragentShablonProductModel, {
   foreignKey: "shablon_id",
   as: "kontragentShablonProducts",
+});
+//Etiketika Model
+
+EtiketikaModel.belongsTo(WorkerModel, {
+  foreignKey: "worker_id",
+  as: "etiketika_worker",
+});
+EtiketikaModel.belongsTo(UserModel, {
+  foreignKey: "user_id",
+  as: "etiketika_user",
+});
+EtiketikaModel.belongsTo(FoodShablonModel, {
+  foreignKey: "shablon_id",
+  as: "etiketika_shablon", // Changed alias
+});
+
+WorkerModel.hasMany(EtiketikaModel, {
+  foreignKey: "worker_id",
+  as: "etiketikalar",
+});
+UserModel.hasMany(EtiketikaModel, {
+  foreignKey: "user_id",
+  as: "etiketikalar",
+});
+FoodShablonModel.hasMany(EtiketikaModel, {
+  foreignKey: "shablon_id",
+  as: "etiketikalar",
 });

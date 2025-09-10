@@ -28,6 +28,11 @@ MarkedCostModel.init(
       allowNull: false,
       defaultValue: 0,
     },
+    etiketika_cost: {
+      type: DataTypes.DECIMAL(12, 5),
+      allowNull: false,
+      defaultValue: 0,
+    },
     upakovka_cost: {
       type: DataTypes.DECIMAL(12, 5),
       allowNull: false,

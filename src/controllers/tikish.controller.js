@@ -68,6 +68,7 @@ class TikishController extends BaseController {
           tikish_soni: miqdor, // Tikish miqdori
           averlo_soni: 0, // Averlo miqdori
           upakovka_soni: 0, // Upakovka miqdori
+          etiketika_soni: 0,
           dazmol_soni: 0, // Dazmol miqdori
           datetime: Math.floor(Date.now() / 1000), // Unix timestamp
         },
@@ -158,6 +159,7 @@ class TikishController extends BaseController {
             tikish_soni: miqdor, // Tikish miqdori
             averlo_soni: 0, // Averlo miqdori
             upakovka_soni: 0, // Upakovka miqdori
+            etiketika_soni: 0,
             dazmol_soni: 0, // Dazmol miqdori
             datetime: Math.floor(Date.now() / 1000), // Unix timestamp
           },

@@ -35,6 +35,11 @@ SalaryRegisterModel.init(
       allowNull: false,
       defaultValue: 0,
     },
+    etiketika_soni: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
     upakovka_soni: {
       type: DataTypes.INTEGER,
       allowNull: false,

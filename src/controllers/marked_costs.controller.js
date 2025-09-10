@@ -27,10 +27,17 @@ class MarkedCostController extends BaseController {
       throw new HttpException(404, req.mf("data not found"));
     }
 
-    const { tikish_cost, averlo_cost, dazmol_cost, upakovka_cost } = req.body;
+    const {
+      tikish_cost,
+      averlo_cost,
+      dazmol_cost,
+      upakovka_cost,
+      etiketika_cost,
+    } = req.body;
 
     if (tikish_cost !== undefined) record.tikish_cost = tikish_cost;
     if (averlo_cost !== undefined) record.averlo_cost = averlo_cost;
+    if (etiketika_cost !== undefined) record.etiketika_cost = etiketika_cost;
     if (dazmol_cost !== undefined) record.dazmol_cost = dazmol_cost;
     if (upakovka_cost !== undefined) record.upakovka_cost = upakovka_cost;
 
