@@ -12,7 +12,13 @@ router.get("/", auth(), awaitHandlerFactory(PrixodController.getAll));
 // Get a prixod entry by ID
 router.get("/id/:id", auth(), awaitHandlerFactory(PrixodController.getById));
 
-// Create a new prixod entry
+// Create a new prixod entry getPrixodsByDateRange
+router.post(
+  "/by-range",
+  auth(),
+
+  awaitHandlerFactory(PrixodController.getPrixodsByDateRange)
+);
 router.post(
   "/",
   auth(),

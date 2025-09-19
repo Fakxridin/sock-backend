@@ -1,9 +1,10 @@
-const { Op } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
 const SalaryRegisterModel = require("../models/salary-register.model");
 const WorkerModel = require("../models/worker.model");
+const SalaryGiveModel = require("../models/salary_give.model"); // <<— YANGI
 const HttpException = require("../utils/HttpException.utils");
 const BaseController = require("./BaseController");
-
+const WorkerAttendanceModel = require("../models/attendance.model");
 class SalaryRegisterController extends BaseController {
   getAll = async (req, res, next) => {
     const salaryRegisters = await SalaryRegisterModel.findAll({
@@ -45,15 +46,14 @@ class SalaryRegisterController extends BaseController {
     res.send(salaryRegisters);
   };
 
+  // ====== BY ID + RANGE ======
   getByWorkerIdAndRange = async (req, res, next) => {
-    const { worker_id } = req.params;
-    const { start_date, end_date } = req.query;
+    const { start_date, end_date, worker_id } = req.body;
 
     if (!start_date || !end_date) {
       throw new HttpException(400, "Start and End date are required");
     }
 
-    // Salary register records for the given worker within the date range
     const salaryRegisters = await SalaryRegisterModel.findAll({
       where: {
         worker_id,
@@ -72,32 +72,45 @@ class SalaryRegisterController extends BaseController {
       );
     }
 
-    // Calculate total values for tikish_soni, averlo_soni, dazmol_soni, upakovka_soni
+    // Totals by fields
     const totalTikishSoni = salaryRegisters.reduce(
-      (acc, register) => acc + register.tikish_soni,
+      (acc, r) => acc + (r.tikish_soni || 0),
       0
     );
     const totalAverloSoni = salaryRegisters.reduce(
-      (acc, register) => acc + register.averlo_soni,
+      (acc, r) => acc + (r.averlo_soni || 0),
       0
     );
     const totalDazmolSoni = salaryRegisters.reduce(
-      (acc, register) => acc + register.dazmol_soni,
+      (acc, r) => acc + (r.dazmol_soni || 0),
       0
     );
     const totalEtiketikaSoni = salaryRegisters.reduce(
-      (acc, register) => acc + register.etiketika_soni,
+      (acc, r) => acc + (r.etiketika_soni || 0),
       0
     );
     const totalUpakovkaSoni = salaryRegisters.reduce(
-      (acc, register) => acc + register.upakovka_soni,
+      (acc, r) => acc + (r.upakovka_soni || 0),
       0
     );
 
-    // Find the worker to display their name
+    // >>> YANGI: SalaryGive bo‘yicha shu intervalda ushbu ishchiga berilgan jami summa
+    const paidSumRow = await SalaryGiveModel.findOne({
+      attributes: [
+        [fn("COALESCE", fn("SUM", col("total_som_summa")), 0), "total"],
+      ],
+      where: {
+        worker_id,
+        datetime: {
+          [Op.between]: [new Date(start_date), new Date(end_date)],
+        },
+      },
+      raw: true,
+    });
+    const totalPaidSom = Number(paidSumRow?.total || 0);
+
     const worker = salaryRegisters[0].worker;
 
-    // Response includes the worker's details and the totals
     res.send({
       worker_id: worker.id,
       worker_name: worker.fullname,
@@ -108,75 +121,182 @@ class SalaryRegisterController extends BaseController {
         jami_etiketika_soni: totalEtiketikaSoni,
         jami_dazmol_soni: totalDazmolSoni,
         jami_upakovka_soni: totalUpakovkaSoni,
+        // >>> YANGI: shu oraliqda berilgan jami summa
+        jami_berilgan_total_som_summa: totalPaidSom,
       },
     });
   };
+
+  // ====== ALL + RANGE ======
+  // ====== ALL + RANGE ======
   getByRangeForAllWorkers = async (req, res, next) => {
-    const { start_date, end_date } = req.body;
+    try {
+      let { start_date, end_date } = req.body;
 
-    if (!start_date || !end_date) {
-      throw new HttpException(400, "Start and End date are required");
-    }
+      if (!start_date || !end_date) {
+        throw new HttpException(400, "Start and End date are required");
+      }
 
-    // Fetch all workers
-    const workers = await WorkerModel.findAll();
+      // ---- Normalize: epoch(sec)/ms yoki ISO bo‘lishi mumkin
+      const toDateObj = (v) => {
+        if (typeof v === "number") {
+          // epoch sekund bo‘lsa *1000, ms bo‘lsa to‘g‘ridan
+          return String(v).length <= 10 ? new Date(v * 1000) : new Date(v);
+        }
+        return new Date(v);
+      };
+      const startObj = toDateObj(start_date);
+      const endObj = toDateObj(end_date);
 
-    // Fetch salary records within the date range
-    const salaryRegisters = await SalaryRegisterModel.findAll({
-      where: {
-        datetime: {
-          [Op.between]: [start_date, end_date],
+      // Attendance jadvalida date = 'YYYY-MM-DD' ko‘rinishida saqlanadi
+      const toYMD = (d) => d.toISOString().slice(0, 10);
+      const startYMD = toYMD(startObj);
+      const endYMD = toYMD(endObj);
+
+      // Kunlar massivini tayyorlab olamiz (inclusive)
+      const makeDateList = (a, b) => {
+        const out = [];
+        const cur = new Date(a);
+        const stop = new Date(b);
+        while (cur <= stop) {
+          out.push(cur.toISOString().slice(0, 10));
+          cur.setDate(cur.getDate() + 1);
+        }
+        return out;
+      };
+      const allDates = makeDateList(startObj, endObj);
+      const totalDays = allDates.length;
+
+      // --- Barcha ishchilar
+      const workers = await WorkerModel.findAll();
+
+      // --- SalaryRegisters (shu oraliqda)
+      const salaryRegisters = await SalaryRegisterModel.findAll({
+        where: {
+          datetime: {
+            [Op.between]: [start_date, end_date],
+          },
         },
-      },
-      include: [{ model: WorkerModel, as: "worker" }],
-      order: [["datetime", "ASC"]],
-    });
+        include: [{ model: WorkerModel, as: "worker" }],
+        order: [["datetime", "ASC"]],
+      });
 
-    // Initialize an object to store the totals for each worker
-    const workerTotals = {};
+      // --- SalaryGive bo‘yicha group by worker_id
+      const giveTotals = await SalaryGiveModel.findAll({
+        attributes: [
+          "worker_id",
+          [fn("COALESCE", fn("SUM", col("total_som_summa")), 0), "total_paid"],
+        ],
+        where: {
+          datetime: {
+            [Op.between]: [start_date, end_date],
+          },
+        },
+        group: ["worker_id"],
+        raw: true,
+      });
+      const paidByWorker = new Map(
+        giveTotals.map((row) => [
+          String(row.worker_id),
+          Number(row.total_paid || 0),
+        ])
+      );
 
-    // Loop through each salary register and accumulate the totals for each worker
-    salaryRegisters.forEach((register) => {
-      const workerId = register.worker.id;
+      // --- Attendance: shu oraliqdagi barcha yozuvlar
+      // date ustuni 'YYYY-MM-DD' bo‘lgani uchun string bilan filter qilamiz
+      const attendanceRows = await WorkerAttendanceModel.findAll({
+        where: {
+          date: { [Op.between]: [startYMD, endYMD] },
+        },
+        attributes: ["worker_id", "date", "is_present"],
+        raw: true,
+      });
 
-      // If worker doesn't exist in workerTotals, initialize the values
-      if (!workerTotals[workerId]) {
-        workerTotals[workerId] = {
-          worker: register.worker, // Store full worker details
-          tikish_soni: 0,
-          averlo_soni: 0,
-          dazmol_soni: 0,
-          etiketika_soni: 0,
-          upakovka_soni: 0,
-        };
+      // worker_id => Set(presentDates)
+      const presentDatesByWorker = new Map();
+      for (const row of attendanceRows) {
+        const wid = String(row.worker_id);
+        if (row.is_present) {
+          if (!presentDatesByWorker.has(wid))
+            presentDatesByWorker.set(wid, new Set());
+          presentDatesByWorker.get(wid).add(row.date);
+        }
+        // is_present=false yozuvi bo‘lsa ham kelgan hisoblanmaydi (absent).
+        // Yo‘qligi ham absent — shuning uchun faqat true holatlarni qo‘shamiz.
       }
 
-      // Accumulate values for each worker
-      workerTotals[workerId].tikish_soni += register.tikish_soni || 0;
-      workerTotals[workerId].averlo_soni += register.averlo_soni || 0;
-      workerTotals[workerId].dazmol_soni += register.dazmol_soni || 0;
-      workerTotals[workerId].etiketika_soni += register.etiketika_soni || 0;
-      workerTotals[workerId].upakovka_soni += register.upakovka_soni || 0;
-    });
+      // --- Har bir ishchi uchun aggregatsiya
+      const workerTotals = {};
 
-    // Add workers with no salary records to workerTotals (set their totals to 0)
-    workers.forEach((worker) => {
-      if (!workerTotals[worker.id]) {
-        workerTotals[worker.id] = {
-          worker: worker, // Include full worker details
-          tikish_soni: 0,
-          averlo_soni: 0,
-          dazmol_soni: 0,
-          etiketika_soni: 0,
-          upakovka_soni: 0,
-        };
+      // SalaryRegisters orqali ishlab chiqarish ko‘rsatkichlari yig‘iladi
+      salaryRegisters.forEach((register) => {
+        const workerId = String(register.worker.id);
+
+        if (!workerTotals[workerId]) {
+          workerTotals[workerId] = {
+            worker: register.worker,
+            // ishlab chiqarish sonlari
+            tikish_soni: 0,
+            averlo_soni: 0,
+            dazmol_soni: 0,
+            etiketika_soni: 0,
+            upakovka_soni: 0,
+            // finance
+            berilgan_total_som_summa: 0,
+            // attendance (to‘ldiramiz keyin)
+            come_days: 0,
+            missed_days: 0,
+          };
+        }
+
+        workerTotals[workerId].tikish_soni += register.tikish_soni || 0;
+        workerTotals[workerId].averlo_soni += register.averlo_soni || 0;
+        workerTotals[workerId].dazmol_soni += register.dazmol_soni || 0;
+        workerTotals[workerId].etiketika_soni += register.etiketika_soni || 0;
+        workerTotals[workerId].upakovka_soni += register.upakovka_soni || 0;
+      });
+
+      // To‘lov yig‘indilarini qo‘shish
+      Object.keys(workerTotals).forEach((wid) => {
+        workerTotals[wid].berilgan_total_som_summa =
+          paidByWorker.get(String(wid)) || 0;
+      });
+
+      // Ish haqida yozuvlari yo‘q ishchilar ham kelsin (nol bilan)
+      workers.forEach((w) => {
+        const wid = String(w.id);
+        if (!workerTotals[wid]) {
+          workerTotals[wid] = {
+            worker: w,
+            tikish_soni: 0,
+            averlo_soni: 0,
+            dazmol_soni: 0,
+            etiketika_soni: 0,
+            upakovka_soni: 0,
+            berilgan_total_som_summa: paidByWorker.get(wid) || 0,
+            come_days: 0,
+            missed_days: 0,
+          };
+        }
+      });
+
+      // --- Attendance’ni hisoblash (kelgan/kelmagan kunlar)
+      for (const w of workers) {
+        const wid = String(w.id);
+        const presentSet = presentDatesByWorker.get(wid) || new Set();
+        const comeDays = presentSet.size; // faqat is_present=true bo‘lganlar
+        const missedDays = Math.max(totalDays - comeDays, 0); // yo‘qligi yoki false — absent
+
+        workerTotals[wid].come_days = comeDays;
+        workerTotals[wid].missed_days = missedDays;
       }
-    });
 
-    // Convert the workerTotals object to an array for the response
-    const result = Object.values(workerTotals);
+      const result = Object.values(workerTotals);
 
-    res.send(result);
+      res.send(result);
+    } catch (err) {
+      next(err);
+    }
   };
 
   create = async (req, res, next) => {

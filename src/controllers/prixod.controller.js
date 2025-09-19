@@ -102,6 +102,47 @@ class PrixodController extends BaseController {
       next(error);
     }
   };
+  // controllers/prixod.controller.js
+
+  getPrixodsByDateRange = async (req, res, next) => {
+    const { start_date, end_date, offset = 0 } = req.body; // Body'dan olish
+
+    try {
+      if (!start_date || !end_date) {
+        throw new HttpException(400, "Start date and end date are required");
+      }
+
+      const whereCondition = {
+        datetime: {
+          [Op.between]: [start_date, end_date],
+        },
+      };
+
+      const data = await PrixodModel.findAndCountAll({
+        offset: Number(offset),
+        limit: 30,
+        order: [["datetime", "DESC"]],
+        where: whereCondition, // Filtr qo'shildi
+        include: [
+          {
+            model: PrixodTableModel,
+            as: "prixodItems",
+            include: [
+              {
+                model: KontragentModel,
+                as: "kontragent",
+                attributes: ["fullname"], // Kontragentni fullname'ini olish
+              },
+            ],
+          },
+        ],
+      });
+
+      res.send(data);
+    } catch (error) {
+      next(error);
+    }
+  };
 
   update = async (req, res, next) => {
     this.checkValidation(req);

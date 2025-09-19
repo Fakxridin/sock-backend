@@ -235,7 +235,7 @@ KontragentPayModel.belongsTo(KassaModel, {
 // Kontragent ↔ KontragentPay
 KontragentModel.hasMany(KontragentPayModel, {
   foreignKey: "kontragent_id",
-  // as: "kontragentPays",
+  as: "kontragentPays",
 });
 
 KontragentPayModel.belongsTo(KontragentModel, {

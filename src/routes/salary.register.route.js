@@ -30,7 +30,16 @@ router.post(
 );
 // Create a new worker
 router.post("/", auth(), awaitHandlerFactory(SalaryRegisterController.create));
-
+router.post(
+  "/report/all",
+  auth(),
+  awaitHandlerFactory(SalaryRegisterController.getByRangeForAllWorkers)
+);
+router.post(
+  "/repor/by-id",
+  auth(),
+  awaitHandlerFactory(SalaryRegisterController.getByWorkerIdAndRange)
+);
 // Update a worker
 router.patch(
   "/id/:id",
