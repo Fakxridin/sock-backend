@@ -31,15 +31,14 @@ class PrixodController extends BaseController {
         {
           datetime,
           total_overall_cost,
-          rasxod_summa, // so‘m — saqlanadi
-          rasxod_summa_dollar, // usd — saqlanadi
+          rasxod_summa,
+          rasxod_summa_dollar,
           kurs_summa,
           comment,
         },
         { transaction }
       );
 
-      // 2) Rasxodni taqsimlash uchun umumiy baza
       const totalInitialBase = prixod_table.reduce(
         (sum, i) =>
           sum + (Number(i.miqdor) || 0) * (Number(i.initial_cost) || 0),
@@ -49,10 +48,8 @@ class PrixodController extends BaseController {
         throw new HttpException(400, "Total base for rasxod division is 0");
       }
 
-      // 3) Hisob-kitoblar USD bo‘yicha
       const rasxodUsd = Number(rasxod_summa_dollar) || 0;
 
-      // 4) Har bir item uchun hisob-kitob va yaratish
       for (const item of prixod_table) {
         const product = await ProductModel.findByPk(item.product_id, {
           transaction,
@@ -77,20 +74,18 @@ class PrixodController extends BaseController {
         const initial = Number(item.initial_cost) || 0;
 
         const base = miqdor * initial;
-        const rasxodShare = (base / totalInitialBase) * rasxodUsd; // USD ulushi
+        const rasxodShare = (base / totalInitialBase) * rasxodUsd;
         const rasxodPerUnit = miqdor ? rasxodShare / miqdor : 0;
 
-        item.product_cost = initial + rasxodPerUnit; // USD
-        item.total_cost = item.product_cost * miqdor; // USD
+        item.product_cost = initial + rasxodPerUnit;
+        item.total_cost = item.product_cost * miqdor;
 
         await PrixodTableModel.create(item, { transaction });
 
-        // Ombor va narxni yangilash
         product.sklad1_qoldiq += miqdor;
         product.narx = item.product_cost; // USD
         await product.save({ transaction });
 
-        // Kontragent balansini yangilash (USD)
         kontragent.balance += miqdor * initial;
         await kontragent.save({ transaction });
       }
